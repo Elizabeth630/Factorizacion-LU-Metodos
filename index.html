@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistemas de Ecuaciones – Métodos Numéricos</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Outfit:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07101e;
+            --s1: #0b1627;
+            --s2: #101f35;
+            --s3: #172540;
+            --accent: #00c8f8;
+            --purple: #8b5cf6;
+            --green: #10d98a;
+            --yellow: #f6c90e;
+            --red: #f06464;
+            --text: #d8eaf8;
+            --muted: #4d6e90;
+            --border: #1a3050;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 200, 248, .025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 200, 248, .025) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        header {
+            position: relative;
+            z-index: 1;
+            padding: 2rem;
+            text-align: center;
+            background: linear-gradient(180deg, #0d1e36 0%, transparent 100%);
+            border-bottom: 1px solid var(--border);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(120deg, #fff 30%, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        header p {
+            color: var(--muted);
+            font-size: .85rem;
+            margin-top: .3rem;
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        .tabs {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            padding: .8rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: var(--s1)
+        }
+
+        .tab {
+            padding: .4rem 1rem;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: .78rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            transition: all .2s
+        }
+
+        .tab:hover {
+            border-color: var(--accent);
+            color: var(--accent)
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent)
+        }
+
+        .panel {
+            display: none;
+            padding: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1
+        }
+
+        .panel.active {
+            display: block
+        }
+
+        .card {
+            background: var(--s1);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: .3
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 1.2rem;
+            letter-spacing: .02em
+        }
+
+        h3 {
+            font-size: .8rem;
+            font-weight: 700;
+            color: var(--yellow);
+            margin: 1.2rem 0 .6rem;
+            text-transform: uppercase;
+            letter-spacing: .07em
+        }
+
+        /* Size selector */
+        .size-row {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem
+        }
+
+        .size-row span {
+            color: var(--muted);
+            font-size: .82rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .06em
+        }
+
+        .sz-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--s2);
+            color: var(--muted);
+            font-size: .9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: 'Outfit', sans-serif
+        }
+
+        .sz-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent)
+        }
+
+        .sz-btn.on {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent)
+        }
+
+        /* Matrix input area */
+        .matrix-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.4rem;
+        }
+
+        .mat-block {
+            display: flex;
+            flex-direction: column;
+            gap: .5rem
+        }
+
+        .mat-label {
+            font-size: .75rem;
+            color: var(--muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            font-family: 'Outfit', sans-serif
+        }
+
+        .lbl-A {
+            color: var(--accent)
+        }
+
+        .lbl-b {
+            color: var(--yellow)
+        }
+
+        /* The bracketed wrapper */
+        .bracket-outer {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--s2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: .7rem .8rem;
+        }
+
+        .bracket-outer.A-style {
+            border-color: rgba(0, 200, 248, .2);
+            background: rgba(0, 200, 248, .03)
+        }
+
+        .bracket-outer.b-style {
+            border-color: rgba(246, 201, 14, .2);
+            background: rgba(246, 201, 14, .03)
+        }
+
+        .bk {
+            font-size: 1.8rem;
+            color: var(--muted);
+            font-weight: 200;
+            line-height: 1;
+            user-select: none;
+            padding: 0 2px
+        }
+
+        .mat-grid {
+            display: grid;
+            gap: 5px
+        }
+
+        .mat-input {
+            width: 66px;
+            height: 34px;
+            padding: 0 6px;
+            text-align: center;
+            background: var(--s1);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .87rem;
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+
+        .mat-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(0, 200, 248, .1)
+        }
+
+        .mat-input:hover:not(:focus) {
+            border-color: #2a4060
+        }
+
+        .b-col {
+            display: flex;
+            flex-direction: column;
+            gap: 5px
+        }
+
+        .b-input {
+            width: 66px;
+            height: 34px;
+            padding: 0 6px;
+            text-align: center;
+            background: var(--s1);
+            border: 1px solid rgba(246, 201, 14, .3);
+            color: var(--yellow);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .87rem;
+            transition: border-color .2s, box-shadow .2s;
+            outline: none;
+        }
+
+        .b-input:focus {
+            border-color: var(--yellow);
+            box-shadow: 0 0 0 3px rgba(246, 201, 14, .1)
+        }
+
+        /* Method */
+        .method-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            margin-bottom: 1.2rem
+        }
+
+        .mth-btn {
+            padding: .42rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--s2);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: .76rem;
+            font-weight: 700;
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            transition: all .2s
+        }
+
+        .mth-btn:hover {
+            border-color: var(--purple);
+            color: #c4b5fd
+        }
+
+        .mth-btn.on {
+            background: var(--purple);
+            color: #fff;
+            border-color: var(--purple)
+        }
+
+        .iter-opts {
+            display: flex;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 1rem
+        }
+
+        .iter-opts label {
+            font-size: .8rem;
+            color: var(--muted);
+            font-weight: 600
+        }
+
+        .iter-opts input {
+            width: 90px;
+            padding: .35rem .6rem;
+            background: var(--s2);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .85rem;
+            outline: none
+        }
+
+        .iter-opts input:focus {
+            border-color: var(--accent)
+        }
+
+        .btn-row {
+            display: flex;
+            gap: .7rem;
+            flex-wrap: wrap;
+            margin-top: .5rem
+        }
+
+        .btn-solve {
+            flex: 1;
+            min-width: 160px;
+            padding: .85rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--accent), var(--purple));
+            color: #fff;
+            font-size: .95rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            cursor: pointer;
+            transition: all .25s;
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+        }
+
+        .btn-solve:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(0, 200, 248, .2)
+        }
+
+        .btn-solve:active {
+            transform: none
+        }
+
+        .btn-clear,
+        .btn-example {
+            padding: .85rem 1.2rem;
+            border-radius: 10px;
+            font-size: .85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .2s;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .btn-clear {
+            border: 1px solid var(--border);
+            background: var(--s2);
+            color: var(--muted)
+        }
+
+        .btn-clear:hover {
+            border-color: var(--red);
+            color: var(--red)
+        }
+
+        .btn-example {
+            border: 1px solid rgba(246, 201, 14, .3);
+            background: rgba(246, 201, 14, .06);
+            color: var(--yellow)
+        }
+
+        .btn-example:hover {
+            background: rgba(246, 201, 14, .12)
+        }
+
+        /* Results */
+        .result-wrap {
+            animation: fu .3s ease
+        }
+
+        @keyframes fu {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .sol-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+            margin: .8rem 0
+        }
+
+        .sol-chip {
+            background: rgba(16, 217, 138, .1);
+            border: 1px solid rgba(16, 217, 138, .3);
+            border-radius: 8px;
+            padding: .5rem 1.1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .9rem;
+            color: var(--green);
+            font-weight: 700;
+        }
+
+        .vtable,
+        .itbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: .6rem
+        }
+
+        .vtable {
+            font-size: .8rem
+        }
+
+        .itbl {
+            font-size: .77rem
+        }
+
+        .vtable th,
+        .itbl th {
+            background: var(--s3);
+            padding: 6px 10px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            font-family: 'Outfit', sans-serif
+        }
+
+        .vtable td,
+        .itbl td {
+            padding: 5px 10px;
+            border: 1px solid var(--border);
+            text-align: right;
+            color: var(--text)
+        }
+
+        .vtable tr:nth-child(even) td,
+        .itbl tr:nth-child(even) td {
+            background: rgba(255, 255, 255, .02)
+        }
+
+        .vtable .ok {
+            color: var(--green)
+        }
+
+        .itbl .last-row td {
+            color: var(--green);
+            background: rgba(16, 217, 138, .05)
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .3rem;
+            padding: .2rem .7rem;
+            border-radius: 20px;
+            font-size: .7rem;
+            font-weight: 700;
+            margin-left: .5rem;
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: .04em
+        }
+
+        .b-ok {
+            background: rgba(16, 217, 138, .12);
+            color: var(--green);
+            border: 1px solid rgba(16, 217, 138, .25)
+        }
+
+        .b-err {
+            background: rgba(240, 100, 100, .12);
+            color: var(--red);
+            border: 1px solid rgba(240, 100, 100, .25)
+        }
+
+        .err-box {
+            background: rgba(240, 100, 100, .08);
+            border: 1px solid rgba(240, 100, 100, .25);
+            border-radius: 8px;
+            padding: .8rem 1rem;
+            color: var(--red);
+            font-size: .84rem;
+            font-family: 'JetBrains Mono', monospace
+        }
+
+        /* Code */
+        .code-wrap {
+            position: relative
+        }
+
+        .code-block {
+            background: #040d1a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .79rem;
+            color: #c8ddf0;
+            overflow-x: auto;
+            line-height: 1.65
+        }
+
+        .code-block .kw {
+            color: #c792ea
+        }
+
+        .code-block .cm {
+            color: #4a6570;
+            font-style: italic
+        }
+
+        .code-block .nm {
+            color: #82aaff
+        }
+
+        .code-block .st {
+            color: #c3e88d
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: .6rem;
+            right: .6rem;
+            padding: .3rem .8rem;
+            background: var(--s3);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            border-radius: 6px;
+            font-size: .7rem;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            transition: all .2s
+        }
+
+        .copy-btn:hover {
+            color: var(--text);
+            border-color: var(--accent)
+        }
+
+        .sys-eqs {
+            background: var(--s2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1rem 1.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .9rem;
+            line-height: 2;
+            color: var(--text);
+            margin-bottom: 1rem
+        }
+
+        .sys-eqs .v {
+            color: var(--accent)
+        }
+
+        .sys-eqs .r {
+            color: var(--yellow)
+        }
+
+        @media(max-width:560px) {
+            .panel {
+                padding: 1rem
+            }
+
+            .mat-input,
+            .b-input {
+                width: 52px;
+                height: 30px;
+                font-size: .78rem
+            }
+
+            header h1 {
+                font-size: 1.4rem
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>🔢 Resolución de Sistemas de Ecuaciones</h1>
+        <p>// LU · Doolittle · Crout · Cholesky · Jacobi · Gauss-Seidel</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" onclick="showTab('solver',this)">🧮 Solver Interactivo</button>
+        <button class="tab" onclick="showTab('octave',this)">🐙 Código Octave</button>
+        <button class="tab" onclick="showTab('fixed1',this)">📐 Sistema 10.2a</button>
+        <button class="tab" onclick="showTab('fixed2',this)">📐 Sistema Img 2</button>
+    </div>
+
+    <!-- ══════════ SOLVER ══════════ -->
+    <div id="tab-solver" class="panel active">
+        <div class="card">
+            <h2>Ingresar Matriz A y Vector b</h2>
+
+            <!-- Tamaño -->
+            <div class="size-row">
+                <span>Tamaño:</span>
+                <button class="sz-btn" onclick="setSize(2,this)">2</button>
+                <button class="sz-btn on" onclick="setSize(3,this)">3</button>
+                <button class="sz-btn" onclick="setSize(4,this)">4</button>
+                <button class="sz-btn" onclick="setSize(5,this)">5</button>
+                <button class="sz-btn" onclick="setSize(6,this)">6</button>
+            </div>
+
+            <!-- Inputs A y b -->
+            <div class="matrix-section">
+                <!-- Matriz A -->
+                <div class="mat-block">
+                    <div class="mat-label lbl-A">Matriz A</div>
+                    <div class="bracket-outer A-style">
+                        <span class="bk">[</span>
+                        <div class="mat-grid" id="gridA"></div>
+                        <span class="bk">]</span>
+                    </div>
+                </div>
+
+                <!-- Signo igual -->
+                <div style="align-self:center;font-size:1.5rem;color:var(--muted);padding-top:1.4rem">=</div>
+
+                <!-- Vector b -->
+                <div class="mat-block">
+                    <div class="mat-label lbl-b">Vector b</div>
+                    <div class="bracket-outer b-style">
+                        <span class="bk">[</span>
+                        <div class="b-col" id="gridB"></div>
+                        <span class="bk">]</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Método -->
+            <h3>Método de resolución</h3>
+            <div class="method-row">
+                <button class="mth-btn on" data-m="doolittle" onclick="setMethod(this)">Doolittle (LU)</button>
+                <button class="mth-btn" data-m="crout" onclick="setMethod(this)">Crout (LU)</button>
+                <button class="mth-btn" data-m="cholesky" onclick="setMethod(this)">Cholesky (LU)</button>
+                <button class="mth-btn" data-m="jacobi" onclick="setMethod(this)">Jacobi</button>
+                <button class="mth-btn" data-m="seidel" onclick="setMethod(this)">Gauss-Seidel</button>
+            </div>
+
+            <div class="iter-opts" id="iterOpts" style="display:none">
+                <label>Tolerancia:</label>
+                <input type="number" id="tolInput" value="1e-8" step="any">
+                <label>Máx. iteraciones:</label>
+                <input type="number" id="maxIterInput" value="500" min="1">
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-example" onclick="loadExample()">📋 Cargar ejemplo</button>
+                <button class="btn-clear" onclick="clearAll()">🗑 Limpiar</button>
+                <button class="btn-solve" onclick="solve()">▶ Resolver</button>
+            </div>
+        </div>
+
+        <div id="resultArea"></div>
+    </div>
+
+    <!-- ══════════ OCTAVE ══════════ -->
+    <div id="tab-octave" class="panel">
+        <h2>// Código Octave / MATLAB</h2>
+
+        <div class="card">
+            <h3>Sistema A — Imagen 2</h3>
+            <div class="code-wrap">
+                <div class="code-block" id="cA">
+                    <button class="copy-btn" onclick="cp('cA')">📋 Copiar</button>
+                    <pre><span class="cm">% 8x1+4x2-x3=11 | -2x1+5x2+x3=4 | 2x1-x2+6x3=7</span>
+A = [ <span class="nm">8</span>,  <span class="nm">4</span>, <span class="nm">-1</span>;
+     <span class="nm">-2</span>,  <span class="nm">5</span>,  <span class="nm">1</span>;
+      <span class="nm">2</span>, <span class="nm">-1</span>,  <span class="nm">6</span>];
+b = [<span class="nm">11</span>; <span class="nm">4</span>; <span class="nm">7</span>];
+
+[L,U,P] = lu(A);
+y = L \ (P*b);
+x = U \ y;
+fprintf(<span class="st">'x1=%.6f  x2=%.6f  x3=%.6f\n'</span>, x);
+fprintf(<span class="st">'Residuo = %.2e\n'</span>, norm(A*x-b));</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Sistema B — 10.2a</h3>
+            <div class="code-wrap">
+                <div class="code-block" id="cB">
+                    <button class="copy-btn" onclick="cp('cB')">📋 Copiar</button>
+                    <pre><span class="cm">% 10x1+2x2-x3=27 | -3x1-6x2+2x3=-61.5 | x1+x2+5x3=-21.5</span>
+A = [<span class="nm">10</span>,  <span class="nm">2</span>, <span class="nm">-1</span>;
+     <span class="nm">-3</span>, <span class="nm">-6</span>,  <span class="nm">2</span>;
+      <span class="nm">1</span>,  <span class="nm">1</span>,  <span class="nm">5</span>];
+b = [<span class="nm">27</span>; <span class="nm">-61.5</span>; <span class="nm">-21.5</span>];
+
+[L,U,P] = lu(A);
+y = L \ (P*b);
+x = U \ y;
+fprintf(<span class="st">'x1=%.6f  x2=%.6f  x3=%.6f\n'</span>, x);
+fprintf(<span class="st">'Residuo = %.2e\n'</span>, norm(A*x-b));</pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Plantilla general N×N</h3>
+            <div class="code-wrap">
+                <div class="code-block" id="cG">
+                    <button class="copy-btn" onclick="cp('cG')">📋 Copiar</button>
+                    <pre><span class="cm">% Modifique A y b según su sistema</span>
+A = [ ... ];
+b = [ ... ];
+
+<span class="cm">%--- Directo ---</span>
+x = A \ b;
+
+<span class="cm">%--- LU con pivoteo ---</span>
+[L,U,P] = lu(A);  y = L\(P*b);  x_lu = U\y;
+
+<span class="cm">%--- Jacobi ---</span>
+n=length(b); x0=zeros(n,1); tol=1e-8; maxIt=500;
+<span class="kw">for</span> k=1:maxIt
+  xn=(b-(A-diag(diag(A)))*x0)./diag(A);
+  <span class="kw">if</span> norm(xn-x0,inf)<tol, <span class="kw">break</span>; <span class="kw">end</span>; x0=xn;
+<span class="kw">end</span>
+
+<span class="cm">%--- Gauss-Seidel ---</span>
+x0=zeros(n,1);
+<span class="kw">for</span> k=1:maxIt
+  xn=x0;
+  <span class="kw">for</span> i=1:n
+    xn(i)=(b(i)-A(i,:)*xn+A(i,i)*xn(i))/A(i,i);
+  <span class="kw">end</span>
+  <span class="kw">if</span> norm(xn-x0,inf)<tol, <span class="kw">break</span>; <span class="kw">end</span>; x0=xn;
+<span class="kw">end</span></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════ SISTEMA 10.2a ══════════ -->
+    <div id="tab-fixed1" class="panel">
+        <h2>Sistema 10.2a</h2>
+        <div class="card">
+            <div class="sys-eqs">
+                10<span class="v">x₁</span> + 2<span class="v">x₂</span> − <span class="v">x₃</span> = <span
+                    class="r">27</span><br>
+                −3<span class="v">x₁</span> − 6<span class="v">x₂</span> + 2<span class="v">x₃</span> = <span
+                    class="r">−61.5</span><br>
+                <span class="v">x₁</span> + <span class="v">x₂</span> + 5<span class="v">x₃</span> = <span
+                    class="r">−21.5</span>
+            </div>
+            <button class="btn-solve" style="width:auto;padding:.7rem 1.8rem" onclick="solveFixed('f1')">▶
+                Resolver</button>
+        </div>
+        <div id="res-f1"></div>
+    </div>
+
+    <!-- ══════════ SISTEMA IMG 2 ══════════ -->
+    <div id="tab-fixed2" class="panel">
+        <h2>Sistema Imagen 2</h2>
+        <div class="card">
+            <div class="sys-eqs">
+                8<span class="v">x₁</span> + 4<span class="v">x₂</span> − <span class="v">x₃</span> = <span
+                    class="r">11</span><br>
+                −2<span class="v">x₁</span> + 5<span class="v">x₂</span> + <span class="v">x₃</span> = <span
+                    class="r">4</span><br>
+                2<span class="v">x₁</span> − <span class="v">x₂</span> + 6<span class="v">x₃</span> = <span
+                    class="r">7</span>
+            </div>
+            <button class="btn-solve" style="width:auto;padding:.7rem 1.8rem" onclick="solveFixed('f2')">▶
+                Resolver</button>
+        </div>
+        <div id="res-f2"></div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════
+        // ÁLGEBRA LINEAL
+        // ═══════════════════════════════════════════
+        const fmt = (v, d = 6) => (+v).toFixed(d);
+        const fmtE = v => (+v).toExponential(3);
+
+        function matVec(A, x) { return A.map(r => r.reduce((s, v, j) => s + v * x[j], 0)); }
+        function eye(n) { return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => +(i === j))); }
+
+        function forwardSub(L, b) {
+            const n = L.length, y = [];
+            for (let i = 0; i < n; i++) {
+                let s = b[i];
+                for (let j = 0; j < i; j++) s -= L[i][j] * y[j];
+                y[i] = s / L[i][i];
+            }
+            return y;
+        }
+
+        function backSub(U, y) {
+            const n = U.length, x = new Array(n);
+            for (let i = n - 1; i >= 0; i--) {
+                let s = y[i];
+                for (let j = i + 1; j < n; j++) s -= U[i][j] * x[j];
+                x[i] = s / U[i][i];
+            }
+            return x;
+        }
+
+        function luDoolittle(A) {
+            const n = A.length;
+            let U = A.map(r => [...r]), L = eye(n), P = eye(n);
+            for (let k = 0; k < n; k++) {
+                let mx = Math.abs(U[k][k]), mr = k;
+                for (let i = k + 1; i < n; i++) if (Math.abs(U[i][k]) > mx) { mx = Math.abs(U[i][k]); mr = i; }
+                if (mr !== k) {
+                    [U[k], U[mr]] = [U[mr], U[k]];
+                    [P[k], P[mr]] = [P[mr], P[k]];
+                    if (k > 0) { const t = [...L[k].slice(0, k)]; L[k].splice(0, k, ...L[mr].slice(0, k)); L[mr].splice(0, k, ...t); }
+                }
+                for (let i = k + 1; i < n; i++) {
+                    if (Math.abs(U[k][k]) < 1e-14) continue;
+                    L[i][k] = U[i][k] / U[k][k];
+                    for (let j = k; j < n; j++) U[i][j] -= L[i][k] * U[k][j];
+                }
+            }
+            return { L, U, P };
+        }
+
+        function luCrout(A) {
+            const n = A.length;
+            const L = Array.from({ length: n }, () => new Array(n).fill(0));
+            const U = eye(n);
+            for (let j = 0; j < n; j++) {
+                for (let i = j; i < n; i++) { let s = A[i][j]; for (let k = 0; k < j; k++) s -= L[i][k] * U[k][j]; L[i][j] = s; }
+                for (let i = j + 1; i < n; i++) { let s = A[j][i]; for (let k = 0; k < j; k++) s -= L[j][k] * U[k][i]; U[j][i] = Math.abs(L[j][j]) < 1e-14 ? 0 : s / L[j][j]; }
+            }
+            return { L, U, P: eye(n) };
+        }
+
+        function luCholesky(A) {
+            const n = A.length;
+            const L = Array.from({ length: n }, () => new Array(n).fill(0));
+            for (let i = 0; i < n; i++) {
+                for (let j = 0; j <= i; j++) {
+                    let s = A[i][j]; for (let k = 0; k < j; k++) s -= L[i][k] * L[j][k];
+                    if (i === j) { if (s < 0) return null; L[i][j] = Math.sqrt(s); }
+                    else L[i][j] = Math.abs(L[j][j]) < 1e-14 ? 0 : s / L[j][j];
+                }
+            }
+            const U = L.map((r, i) => r.map((v, j) => j < i ? 0 : L[j][i]));
+            return { L, U, P: eye(n) };
+        }
+
+        function solveLU(A, b, method) {
+            let r;
+            if (method === 'doolittle') r = luDoolittle(A);
+            else if (method === 'crout') r = luCrout(A);
+            else r = luCholesky(A);
+            if (!r) return { err: 'La matriz no es definida positiva (Cholesky requiere SPD).' };
+            const { L, U, P } = r;
+            const y = forwardSub(L, matVec(P, b));
+            const x = backSub(U, y);
+            return { x, L, U, P };
+        }
+
+        function jacobi(A, b, tol, maxIt) {
+            const n = A.length; let x = new Array(n).fill(0); const hist = [];
+            for (let k = 0; k < maxIt; k++) {
+                const xn = new Array(n);
+                for (let i = 0; i < n; i++) { let s = b[i]; for (let j = 0; j < n; j++) if (j !== i) s -= A[i][j] * x[j]; xn[i] = s / A[i][i]; }
+                const e = Math.max(...xn.map((v, i) => Math.abs(v - x[i])));
+                hist.push({ k: k + 1, x: [...xn], e }); x = [...xn];
+                if (e < tol) return { x, iter: k + 1, hist, conv: true };
+            }
+            return { x, iter: maxIt, hist, conv: false };
+        }
+
+        function gaussSeidel(A, b, tol, maxIt) {
+            const n = A.length; let x = new Array(n).fill(0); const hist = [];
+            for (let k = 0; k < maxIt; k++) {
+                const xo = [...x];
+                for (let i = 0; i < n; i++) { let s = b[i]; for (let j = 0; j < n; j++) if (j !== i) s -= A[i][j] * x[j]; x[i] = s / A[i][i]; }
+                const e = Math.max(...x.map((v, i) => Math.abs(v - xo[i])));
+                hist.push({ k: k + 1, x: [...x], e });
+                if (e < tol) return { x, iter: k + 1, hist, conv: true };
+            }
+            return { x, iter: maxIt, hist, conv: false };
+        }
+
+        // ═══════════════════════════════════════════
+        // UI
+        // ═══════════════════════════════════════════
+        let N = 3, activeMethod = 'doolittle';
+
+        function setSize(n, btn) {
+            N = n;
+            document.querySelectorAll('.sz-btn').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            buildGrids();
+        }
+
+        function buildGrids() {
+            const gA = document.getElementById('gridA');
+            gA.style.gridTemplateColumns = `repeat(${N},auto)`;
+            gA.innerHTML = '';
+            for (let i = 0; i < N; i++)
+                for (let j = 0; j < N; j++) {
+                    const inp = document.createElement('input');
+                    inp.type = 'number'; inp.step = 'any'; inp.value = '0';
+                    inp.className = 'mat-input'; inp.id = `a${i}_${j}`;
+                    inp.title = `a${i + 1}${j + 1}`;
+                    // Tab order: row by row
+                    inp.tabIndex = (i * N + j + 1);
+                    gA.appendChild(inp);
+                }
+
+            const gB = document.getElementById('gridB');
+            gB.innerHTML = '';
+            for (let i = 0; i < N; i++) {
+                const inp = document.createElement('input');
+                inp.type = 'number'; inp.step = 'any'; inp.value = '0';
+                inp.className = 'b-input'; inp.id = `b${i}`;
+                inp.title = `b${i + 1}`;
+                inp.tabIndex = (N * N + i + 1);
+                gB.appendChild(inp);
+            }
+        }
+
+        function setMethod(btn) {
+            document.querySelectorAll('.mth-btn').forEach(b => b.classList.remove('on'));
+            btn.classList.add('on');
+            activeMethod = btn.dataset.m;
+            document.getElementById('iterOpts').style.display =
+                (activeMethod === 'jacobi' || activeMethod === 'seidel') ? 'flex' : 'none';
+        }
+
+        function getAb() {
+            const A = [], b = [];
+            for (let i = 0; i < N; i++) {
+                A.push([]);
+                for (let j = 0; j < N; j++) A[i].push(parseFloat(document.getElementById(`a${i}_${j}`).value) || 0);
+                b.push(parseFloat(document.getElementById(`b${i}`).value) || 0);
+            }
+            return { A, b };
+        }
+
+        function loadExample() {
+            const ex = {
+                2: { A: [[3, -1], [1, 2]], b: [7, 4] },
+                3: { A: [[8, 4, -1], [-2, 5, 1], [2, -1, 6]], b: [11, 4, 7] },
+                4: { A: [[10, 2, -1, 0], [-3, -6, 2, 1], [1, 1, 5, -1], [0, 2, -1, 4]], b: [27, -61.5, -21.5, 10] },
+                5: { A: [[5, 1, -1, 0, 0], [1, 5, 1, -1, 0], [-1, 1, 5, 1, -1], [0, -1, 1, 5, 1], [0, 0, -1, 1, 5]], b: [4, 6, 4, 6, 4] },
+                6: { A: [[6, 1, -1, 0, 0, 0], [1, 6, 1, -1, 0, 0], [-1, 1, 6, 1, -1, 0], [0, -1, 1, 6, 1, -1], [0, 0, -1, 1, 6, 1], [0, 0, 0, -1, 1, 6]], b: [5, 5, 5, 5, 5, 5] },
+            }[N];
+            if (!ex) return;
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) document.getElementById(`a${i}_${j}`).value = ex.A[i][j];
+                document.getElementById(`b${i}`).value = ex.b[i];
+            }
+        }
+
+        function clearAll() {
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) document.getElementById(`a${i}_${j}`).value = 0;
+                document.getElementById(`b${i}`).value = 0;
+            }
+            document.getElementById('resultArea').innerHTML = '';
+        }
+
+        // ─── Render helpers ───
+        function chipHTML(x) {
+            return '<div class="sol-chips">' + x.map((v, i) => `<div class="sol-chip">x<sub>${i + 1}</sub> = ${fmt(v)}</div>`).join('') + '</div>';
+        }
+
+        function matTableHTML(M) {
+            let t = '<table style="border-collapse:collapse">';
+            M.forEach(r => {
+                t += '<tr>';
+                r.forEach(v => { t += `<td style="padding:4px 10px;text-align:right;border:1px solid var(--border);font-size:.79rem;font-family:'JetBrains Mono',monospace;color:var(--text)">${fmt(v)}</td>`; });
+                t += '</tr>';
+            });
+            return t + '</table>';
+        }
+
+        function verifyHTML(A, x, b) {
+            const Ax = matVec(A, x);
+            const maxE = Math.max(...Ax.map((v, i) => Math.abs(v - b[i])));
+            let h = `<h3>Verificación A·x = b <span class="badge b-ok">residuo = ${fmtE(maxE)}</span></h3>`;
+            h += `<table class="vtable"><thead><tr><th>Fila</th><th>A·x calculado</th><th>b esperado</th><th>|error|</th></tr></thead><tbody>`;
+            Ax.forEach((v, i) => { h += `<tr><td style="text-align:center">${i + 1}</td><td>${fmt(v)}</td><td>${fmt(b[i])}</td><td class="ok">${fmtE(Math.abs(v - b[i]))}</td></tr>`; });
+            return h + '</tbody></table>';
+        }
+
+        function luResultHTML(res, A, b, methodName) {
+            const names = { doolittle: 'Doolittle', crout: 'Crout', cholesky: 'Cholesky' };
+            let h = `<div class="result-wrap"><div class="card">`;
+            h += `<h2>Resultado — ${names[methodName]}</h2>`;
+            h += `<h3>Matrices L y U</h3>`;
+            h += `<div style="display:flex;flex-wrap:wrap;gap:2rem;margin-bottom:1rem">`;
+            h += `<div><div style="font-size:.72rem;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Matriz L</div>${matTableHTML(res.L)}</div>`;
+            h += `<div><div style="font-size:.72rem;color:var(--purple);font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.4rem">Matriz U</div>${matTableHTML(res.U)}</div>`;
+            h += `</div>`;
+            h += `<h3>Solución x</h3>${chipHTML(res.x)}`;
+            h += verifyHTML(A, res.x, b);
+            h += `</div></div>`;
+            return h;
+        }
+
+        function iterResultHTML(res, A, b, name) {
+            const badge = res.conv
+                ? `<span class="badge b-ok">✓ Convergió en ${res.iter} iter</span>`
+                : `<span class="badge b-err">✗ No convergió (${res.iter} iter)</span>`;
+            let h = `<div class="result-wrap"><div class="card">`;
+            h += `<h2>Resultado — ${name} ${badge}</h2>`;
+            h += `<h3>Solución x</h3>${chipHTML(res.x)}`;
+            const show = res.hist.slice(-30);
+            h += `<h3>Historial de iteraciones (últimas ${show.length})</h3>`;
+            h += `<table class="itbl"><thead><tr><th>Iter</th>`;
+            res.x.forEach((_, i) => { h += `<th>x${i + 1}</th>`; });
+            h += `<th>Error máx.</th></tr></thead><tbody>`;
+            show.forEach((r, idx) => {
+                const last = idx === show.length - 1;
+                h += `<tr${last ? ' class="last-row"' : ''}><td style="text-align:center">${r.k}</td>`;
+                r.x.forEach(v => { h += `<td>${fmt(v)}</td>`; });
+                h += `<td>${fmtE(r.e)}</td></tr>`;
+            });
+            h += `</tbody></table>`;
+            h += verifyHTML(A, res.x, b);
+            h += '</div></div>';
+            return h;
+        }
+
+        // ─── Solve principal ───
+        function solve() {
+            const { A, b } = getAb();
+            const area = document.getElementById('resultArea');
+            const tol = parseFloat(document.getElementById('tolInput').value) || 1e-8;
+            const maxIt = parseInt(document.getElementById('maxIterInput').value) || 500;
+
+            if (activeMethod === 'jacobi' || activeMethod === 'seidel') {
+                const res = activeMethod === 'jacobi' ? jacobi(A, b, tol, maxIt) : gaussSeidel(A, b, tol, maxIt);
+                area.innerHTML = iterResultHTML(res, A, b, activeMethod === 'jacobi' ? 'Jacobi' : 'Gauss-Seidel');
+            } else {
+                const res = solveLU(A, b, activeMethod);
+                if (res.err) { area.innerHTML = `<div class="err-box">❌ ${res.err}</div>`; return; }
+                area.innerHTML = luResultHTML(res, A, b, activeMethod);
+            }
+            area.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ─── Sistemas fijos ───
+        function solveFixed(id) {
+            const cfg = {
+                f1: { A: [[10, 2, -1], [-3, -6, 2], [1, 1, 5]], b: [27, -61.5, -21.5] },
+                f2: { A: [[8, 4, -1], [-2, 5, 1], [2, -1, 6]], b: [11, 4, 7] },
+            }[id];
+            const res = solveLU(cfg.A, cfg.b, 'doolittle');
+            document.getElementById(`res-${id}`).innerHTML = luResultHTML(res, cfg.A, cfg.b, 'doolittle');
+        }
+
+        // ─── Tabs ───
+        function showTab(name, btn) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + name).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        function cp(id) {
+            const pre = document.getElementById(id).querySelector('pre');
+            navigator.clipboard.writeText(pre.innerText).then(() => {
+                const b = document.getElementById(id).querySelector('.copy-btn');
+                b.textContent = '✓ Copiado'; setTimeout(() => b.textContent = '📋 Copiar', 2000);
+            });
+        }
+
+        // Init
+        buildGrids();
+    </script>
+</body>
+
+</html>
